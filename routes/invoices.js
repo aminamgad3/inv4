@@ -74,8 +74,60 @@ router.get('/', requireModuleAccess('invoices'), async (req, res) => {
 // New invoice form
 router.get('/new', requirePermission('invoices', 'create'), async (req, res) => {
   try {
-    const clients = await Client.find().sort({ fullName: 1 });
-    const files = await File.find().populate('company', 'name').sort({ fileName: 1 });
+    // Get clients sorted by most used (invoice count)
+    const clients = await Client.aggregate([
+      {
+        $lookup: {
+          from: 'invoices',
+          localField: '_id',
+          foreignField: 'client',
+          as: 'invoices'
+        }
+      },
+      {
+        $addFields: {
+          invoiceCount: { $size: '$invoices' }
+        }
+      },
+      {
+        $sort: { invoiceCount: -1, fullName: 1 }
+      }
+    ]);
+    
+    // Get files sorted by most used (invoice count)
+    const files = await File.aggregate([
+      {
+        $lookup: {
+          from: 'invoices',
+          localField: '_id',
+          foreignField: 'file',
+          as: 'invoices'
+        }
+      },
+      {
+        $addFields: {
+          invoiceCount: { $size: '$invoices' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'companies',
+          localField: 'company',
+          foreignField: '_id',
+          as: 'company'
+        }
+      },
+      {
+        $unwind: {
+          path: '$company',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $sort: { invoiceCount: -1, fileName: 1 }
+      }
+    ]);
+    
     const distributors = await User.find({ role: 'distributor', isActive: true }).sort({ username: 1 });
     
     res.render('invoices/new', { clients, files, distributors });

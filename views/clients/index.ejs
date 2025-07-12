@@ -147,6 +147,9 @@
                                 تاريخ الإنشاء
                             </th>
                             ${userPermissions && (userPermissions.canUpdate || userPermissions.canDelete) ? `
+                            <a href="/clients/${client._id}" class="btn btn-sm btn-outline-success" title="تفاصيل العميل">
+                                <i class="fas fa-info-circle"></i>
+                            </a>
                                 <th class="text-center">
                                     <i class="fas fa-cogs"></i>
                                     الإجراءات
@@ -162,7 +165,10 @@
                                         <div class="avatar-circle bg-primary text-white me-2">
                                             ${client.fullName.charAt(0).toUpperCase()}
                                         </div>
-                                        <strong>${client.fullName}</strong>
+                                        <div>
+                                            <strong>${client.fullName}</strong>
+                                            ${client.invoiceCount > 0 ? `<div class="small text-muted">${client.invoiceCount} فاتورة</div>` : ''}
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
